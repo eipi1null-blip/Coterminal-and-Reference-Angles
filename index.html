@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coterminal and Reference Angles Applet</title>
+  <style>
+    :root {
+      --ink: #1f2933;
+      --muted: #5f6b7a;
+      --grid: #d9e0e8;
+      --axis: #2f343a;
+      --blue: #2554a4;
+      --orange: #f2a33a;
+      --green: #18845d;
+      --purple: #7650c9;
+      --red: #c8375a;
+      --panel: #f6f8fb;
+      --line: #ccd5df;
+      --white: #ffffff;
+      --shadow: rgba(20, 35, 55, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: #eef3f8;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(560px, 1fr) 360px;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .graph-wrap, .controls {
+      background: var(--white);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 30px var(--shadow);
+    }
+
+    .graph-wrap {
+      position: relative;
+      min-height: 680px;
+      overflow: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 680px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .controls {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 14px;
+    }
+
+    .section {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .value-pill {
+      min-width: 96px;
+      text-align: center;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 6px 8px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      background: var(--blue);
+      color: var(--white);
+      padding: 11px 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #53606e;
+    }
+
+    button.ghost {
+      background: #e8edf4;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .readout-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .readout {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 10px;
+    }
+
+    .readout .k {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .readout .v {
+      font-size: 22px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .readout .small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .formula {
+      background: #fff7e8;
+      border-left: 5px solid var(--orange);
+      padding: 10px 12px;
+      line-height: 1.45;
+      font-size: 15px;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 4px;
+      display: inline-block;
+    }
+
+    .swatch.blue { background: var(--blue); }
+    .swatch.orange { background: var(--orange); }
+    .swatch.green { background: var(--green); }
+    .swatch.purple { background: var(--purple); }
+
+    .help {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .grid-line {
+      stroke: var(--grid);
+      stroke-width: 1;
+    }
+
+    .axis {
+      stroke: var(--axis);
+      stroke-width: 3;
+    }
+
+    .unit-circle {
+      fill: none;
+      stroke: #aab5c2;
+      stroke-width: 2;
+    }
+
+    .base-arm {
+      stroke: var(--blue);
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .terminal-arm {
+      stroke: var(--purple);
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .reference-arm {
+      stroke: var(--orange);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 10 8;
+    }
+
+    .coterminal-ghost {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 3;
+      stroke-dasharray: 8 8;
+      opacity: 0.45;
+    }
+
+    .rotation-arc {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+
+    .rotation-extra {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 1.8;
+      opacity: 0.22;
+    }
+
+    .reference-arc {
+      fill: none;
+      stroke: var(--orange);
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+
+    .label {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+      font-weight: 700;
+      fill: var(--ink);
+    }
+
+    .label-small {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      font-weight: 700;
+      fill: var(--muted);
+    }
+
+    .terminal-dot {
+      fill: var(--purple);
+      stroke: var(--white);
+      stroke-width: 4;
+      cursor: grab;
+    }
+
+    .terminal-dot:active {
+      cursor: grabbing;
+    }
+
+    .drag-hit {
+      fill: transparent;
+      cursor: grab;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .graph-wrap {
+        min-height: 580px;
+      }
+
+      svg {
+        min-height: 580px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 10px;
+      }
+
+      .button-row, .legend {
+        grid-template-columns: 1fr;
+      }
+
+      .graph-wrap {
+        min-height: 500px;
+      }
+
+      svg {
+        min-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="graph-wrap" aria-label="Coterminal and reference angles coordinate plane">
+      <svg id="plane" viewBox="0 0 800 680" role="img" aria-labelledby="svgTitle svgDesc">
+        <title id="svgTitle">Coterminal and reference angles</title>
+        <desc id="svgDesc">A coordinate plane with a rotating terminal side showing positive and negative angles, coterminal angles, and reference angle.</desc>
+      </svg>
+    </section>
+
+    <aside class="controls">
+      <div>
+        <h1>Coterminal Angles</h1>
+        <p class="subtitle">Set an original angle, then rotate a separate terminal side until it lines up as a coterminal angle.</p>
+      </div>
+
+      <div class="section">
+        <label for="angleInput">
+          Original angle
+          <span class="value-pill" id="anglePill">45°</span>
+        </label>
+        <input id="angleInput" type="number" value="45" step="1" min="-7200" max="7200" aria-describedby="angleHelp">
+        <p class="help" id="angleHelp">This blue terminal side stays fixed while you search for matching coterminal angles.</p>
+      </div>
+
+      <div class="section">
+        <label for="angleSlider">
+          Rotating terminal angle
+          <span class="value-pill" id="directionPill">CCW</span>
+        </label>
+        <input id="angleSlider" type="range" value="45" min="-1080" max="1080" step="1">
+        <input id="searchInput" type="number" value="45" step="1" min="-7200" max="7200" style="margin-top: 10px;" aria-label="Rotating terminal angle in degrees">
+        <div class="button-row" style="margin-top: 10px;">
+          <button id="ccwBtn" type="button">+360° CCW</button>
+          <button id="cwBtn" type="button">-360° CW</button>
+          <button id="add45Btn" type="button" class="ghost">+45°</button>
+          <button id="sub45Btn" type="button" class="ghost">-45°</button>
+          <button id="resetBtn" type="button" class="secondary">Reset</button>
+          <button id="zeroBtn" type="button" class="secondary">0°</button>
+        </div>
+      </div>
+
+      <div class="section readout-grid" aria-live="polite">
+        <div class="readout">
+          <div class="k">Original angle</div>
+          <div class="v" id="givenDeg">45°</div>
+          <div class="small" id="givenRad">π/4 radians</div>
+        </div>
+        <div class="readout">
+          <div class="k">Rotating terminal angle</div>
+          <div class="v" id="principalDeg">45°</div>
+          <div class="small" id="principalRad">π/4 radians</div>
+        </div>
+        <div class="readout">
+          <div class="k">Reference angle</div>
+          <div class="v" id="referenceDeg">45°</div>
+          <div class="small" id="referenceRad">π/4 radians</div>
+        </div>
+        <div class="readout">
+          <div class="k">Line-up status</div>
+          <div class="v" id="quadrant">Quadrant I</div>
+          <div class="small" id="turns">0 full turns plus 45°</div>
+        </div>
+      </div>
+
+      <div class="formula" id="formula">
+        Coterminal angles of 45°: 45° + 360°n<br>
+        In radians: π/4 + 2πn
+      </div>
+
+      <div class="legend">
+        <span><i class="swatch blue"></i>Original side</span>
+        <span><i class="swatch green"></i>Rotation</span>
+        <span><i class="swatch orange"></i>Reference angle</span>
+        <span><i class="swatch purple"></i>Rotating side</span>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const svg = document.getElementById("plane");
+    const angleInput = document.getElementById("angleInput");
+    const angleSlider = document.getElementById("angleSlider");
+    const searchInput = document.getElementById("searchInput");
+    const anglePill = document.getElementById("anglePill");
+    const directionPill = document.getElementById("directionPill");
+    const givenDeg = document.getElementById("givenDeg");
+    const givenRad = document.getElementById("givenRad");
+    const principalDeg = document.getElementById("principalDeg");
+    const principalRad = document.getElementById("principalRad");
+    const referenceDeg = document.getElementById("referenceDeg");
+    const referenceRad = document.getElementById("referenceRad");
+    const quadrant = document.getElementById("quadrant");
+    const turns = document.getElementById("turns");
+    const formula = document.getElementById("formula");
+
+    const W = 800;
+    const H = 680;
+    const cx = 390;
+    const cy = 335;
+    const scale = 78;
+    const radius = 245;
+    let baseAngle = 45;
+    let angle = 45;
+    let dragging = false;
+    let dragTurns = 0;
+    let previousDragPrincipal = 45;
+    let dragAngleOffset = 0;
+
+    function mod(n, m) {
+      return ((n % m) + m) % m;
+    }
+
+    function round(n, places = 2) {
+      const p = 10 ** places;
+      return Math.round(n * p) / p;
+    }
+
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b) {
+        const t = b;
+        b = a % b;
+        a = t;
+      }
+      return a || 1;
+    }
+
+    function degreesToRadiansLabel(deg) {
+      if (deg === 0) return "0 radians";
+      if (!Number.isInteger(deg)) return `${round(deg * Math.PI / 180, 3)} radians`;
+      const sign = deg < 0 ? "-" : "";
+      const abs = Math.abs(deg);
+      const numerator = abs;
+      const denominator = 180;
+      const d = gcd(numerator, denominator);
+      const n = numerator / d;
+      const den = denominator / d;
+      if (den === 1) {
+        return `${sign}${n === 1 ? "" : n}π radians`;
+      }
+      return `${sign}${n === 1 ? "" : n}π/${den} radians`;
+    }
+
+    function pointAt(deg, r = radius) {
+      const rad = deg * Math.PI / 180;
+      return {
+        x: cx + r * Math.cos(rad),
+        y: cy - r * Math.sin(rad)
+      };
+    }
+
+    function arcPath(startDeg, endDeg, r) {
+      const start = pointAt(startDeg, r);
+      const end = pointAt(endDeg, r);
+      const delta = endDeg - startDeg;
+      const sweep = delta >= 0 ? 0 : 1;
+      const large = Math.abs(delta) > 180 ? 1 : 0;
+      return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} ${sweep} ${end.x} ${end.y}`;
+    }
+
+    function fullCirclePath(r, clockwise) {
+      const top = { x: cx, y: cy - r };
+      const bottom = { x: cx, y: cy + r };
+      const sweep = clockwise ? 1 : 0;
+      return `M ${top.x} ${top.y} A ${r} ${r} 0 1 ${sweep} ${bottom.x} ${bottom.y} A ${r} ${r} 0 1 ${sweep} ${top.x} ${top.y}`;
+    }
+
+    function line(x1, y1, x2, y2, className, extra = "") {
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${className}" ${extra}></line>`;
+    }
+
+    function text(x, y, content, className = "label-small", anchor = "middle") {
+      return `<text x="${x}" y="${y}" class="${className}" text-anchor="${anchor}">${content}</text>`;
+    }
+
+    function getReferenceAngle(principal) {
+      if (principal <= 90) return principal;
+      if (principal <= 180) return 180 - principal;
+      if (principal <= 270) return principal - 180;
+      return 360 - principal;
+    }
+
+    function getQuadrant(principal) {
+      if (principal === 0 || principal === 360) return "Positive x-axis";
+      if (principal === 90) return "Positive y-axis";
+      if (principal === 180) return "Negative x-axis";
+      if (principal === 270) return "Negative y-axis";
+      if (principal > 0 && principal < 90) return "Quadrant I";
+      if (principal > 90 && principal < 180) return "Quadrant II";
+      if (principal > 180 && principal < 270) return "Quadrant III";
+      return "Quadrant IV";
+    }
+
+    function referenceStart(principal) {
+      if (principal <= 90) return 0;
+      if (principal <= 180) return 180;
+      if (principal <= 270) return 180;
+      return 360;
+    }
+
+    function syncControls() {
+      angleInput.value = String(Math.round(baseAngle));
+      searchInput.value = String(round(angle, 1));
+      angleSlider.value = String(Math.max(-1080, Math.min(1080, angle)));
+    }
+
+    function setAngle(next, shouldSync = true, snap = true) {
+      const clean = snap ? Math.round(next) : round(next, 1);
+      angle = Math.max(-7200, Math.min(7200, clean));
+      if (shouldSync) syncControls();
+      render();
+    }
+
+    function snapPrincipalAngle(principal) {
+      const targets = [0, 90, 180, 270, 360, mod(baseAngle, 360)];
+      let best = principal;
+      let bestDistance = Infinity;
+      targets.forEach(target => {
+        const distance = Math.min(Math.abs(principal - target), 360 - Math.abs(principal - target));
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = mod(target, 360);
+        }
+      });
+      return bestDistance <= 1.8 ? best : principal;
+    }
+
+    function setBaseAngle(next) {
+      baseAngle = Math.max(-7200, Math.min(7200, Math.round(next)));
+      syncControls();
+      render();
+    }
+
+    function render() {
+      const basePrincipal = mod(baseAngle, 360);
+      const principal = mod(angle, 360);
+      const ref = getReferenceAngle(basePrincipal);
+      const q = getQuadrant(basePrincipal);
+      const baseEnd = pointAt(basePrincipal);
+      const end = pointAt(principal);
+      const refBase = referenceStart(basePrincipal);
+      const refEnd = basePrincipal;
+      const fullTurns = angle >= 0 ? Math.floor(angle / 360) : Math.ceil(angle / 360);
+      const remainder = angle - fullTurns * 360;
+      const rotationPositive = angle >= 0;
+      const visibleRemainder = mod(angle, 360);
+      const absTurns = Math.min(Math.floor(Math.abs(angle) / 360), 12);
+      const rotationArcEnd = rotationPositive ? visibleRemainder : -mod(-angle, 360);
+      const direction = angle > 0 ? "CCW" : angle < 0 ? "CW" : "none";
+
+      let grid = "";
+      for (let x = -4; x <= 4; x++) {
+        const px = cx + x * scale;
+        grid += line(px, 38, px, H - 38, "grid-line");
+        if (x !== 0) grid += text(px, cy + 28, x, "label-small");
+      }
+      for (let y = -4; y <= 4; y++) {
+        const py = cy - y * scale;
+        grid += line(38, py, W - 38, py, "grid-line");
+        if (y !== 0) grid += text(cx - 22, py + 7, y, "label-small", "end");
+      }
+
+      let fullTurnPaths = "";
+      for (let i = 0; i < absTurns; i++) {
+        fullTurnPaths += `<path d="${fullCirclePath(52 + i * 9, !rotationPositive)}" class="rotation-extra"></path>`;
+      }
+
+      let rotationArc = "";
+      if (angle !== 0 && Math.abs(rotationArcEnd) > 0.2) {
+        rotationArc = `<path d="${arcPath(0, rotationArcEnd, 86)}" class="rotation-arc"></path>`;
+      }
+
+      let referenceArc = "";
+      if (ref > 0 && ref < 90) {
+        referenceArc = `<path d="${arcPath(refBase, refEnd, 128)}" class="reference-arc"></path>`;
+      }
+
+      const xAxisStart = { x: 38, y: cy };
+      const xAxisEnd = { x: W - 38, y: cy };
+      const yAxisStart = { x: cx, y: H - 38 };
+      const yAxisEnd = { x: cx, y: 38 };
+
+      const referencePoint = pointAt(refBase);
+      const terminalLabelPoint = pointAt(principal, radius + 32);
+      const baseLabelPoint = pointAt(basePrincipal, radius - 62);
+      const refLabelAngle = refBase === 360 ? (360 - ref / 2) : (refBase + (basePrincipal - refBase) / 2);
+      const refLabelPoint = pointAt(refLabelAngle, 164);
+      const arcLabelPoint = pointAt(rotationArcEnd / 2, 112);
+      const ghostPoint = pointAt(basePrincipal, radius - 42);
+      const coterminalDifference = angle - baseAngle;
+      const coterminalRemainder = Math.min(mod(coterminalDifference, 360), 360 - mod(coterminalDifference, 360));
+      const isCoterminal = coterminalRemainder < 0.05;
+      const lineUpText = isCoterminal ? "Lined up" : "Not lined up";
+      const differenceText = `${round(coterminalDifference, 1)}° = ${round(coterminalDifference / 360, 2)} full turns from original`;
+
+      const coterminalExamples = [baseAngle - 360, baseAngle, baseAngle + 360];
+      const exampleText = coterminalExamples
+        .map(v => `${v === -0 ? 0 : v}°`)
+        .join(", ");
+
+      svg.innerHTML = `
+        <defs>
+          <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+            <path d="M 0 0 L 12 6 L 0 12 z" fill="var(--axis)"></path>
+          </marker>
+          <marker id="greenArrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M 0 0 L 12 6 L 0 12 z" fill="var(--green)"></path>
+          </marker>
+          <marker id="orangeArrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M 0 0 L 12 6 L 0 12 z" fill="var(--orange)"></path>
+          </marker>
+          <marker id="blueArrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+            <path d="M 0 0 L 12 6 L 0 12 z" fill="var(--blue)"></path>
+          </marker>
+          <marker id="purpleArrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+            <path d="M 0 0 L 12 6 L 0 12 z" fill="var(--purple)"></path>
+          </marker>
+        </defs>
+        ${grid}
+        ${line(xAxisStart.x, xAxisStart.y, xAxisEnd.x, xAxisEnd.y, "axis", 'marker-end="url(#arrow)"')}
+        ${line(yAxisStart.x, yAxisStart.y, yAxisEnd.x, yAxisEnd.y, "axis", 'marker-end="url(#arrow)"')}
+        ${text(W - 34, cy - 16, "x", "label")}
+        ${text(cx + 18, 44, "y", "label")}
+        <circle cx="${cx}" cy="${cy}" r="${radius}" class="unit-circle"></circle>
+        ${fullTurnPaths}
+        ${rotationArc ? rotationArc.replace('class="rotation-arc"', 'class="rotation-arc" marker-end="url(#greenArrow)"') : ""}
+        ${referenceArc ? referenceArc.replace('class="reference-arc"', 'class="reference-arc" marker-end="url(#orangeArrow)"') : ""}
+        <path d="M ${cx} ${cy} L ${referencePoint.x} ${referencePoint.y}" class="reference-arm"></path>
+        <path d="M ${cx} ${cy} L ${ghostPoint.x} ${ghostPoint.y}" class="coterminal-ghost"></path>
+        <path d="M ${cx} ${cy} L ${baseEnd.x} ${baseEnd.y}" class="base-arm" marker-end="url(#blueArrow)"></path>
+        <path d="M ${cx} ${cy} L ${end.x} ${end.y}" class="terminal-arm" marker-end="url(#purpleArrow)"></path>
+        <circle id="dragHit" cx="${end.x}" cy="${end.y}" r="34" class="drag-hit"></circle>
+        <circle id="dragDot" cx="${end.x}" cy="${end.y}" r="14" class="terminal-dot"></circle>
+        ${text(baseLabelPoint.x, baseLabelPoint.y, `${basePrincipal}°`, "label-small")}
+        ${text(terminalLabelPoint.x, terminalLabelPoint.y, `${round(angle, 1)}°`, "label")}
+        ${ref > 0 ? text(refLabelPoint.x, refLabelPoint.y, `${ref}°`, "label-small") : ""}
+        ${angle !== 0 ? text(arcLabelPoint.x, arcLabelPoint.y, direction, "label-small") : ""}
+      `;
+
+      anglePill.textContent = `${baseAngle}°`;
+      directionPill.textContent = angle > 0 ? "CCW +" : angle < 0 ? "CW -" : "0";
+      givenDeg.textContent = `${baseAngle}°`;
+      givenRad.textContent = degreesToRadiansLabel(baseAngle);
+      principalDeg.textContent = `${round(angle, 1)}°`;
+      principalRad.textContent = `${degreesToRadiansLabel(angle)}; terminal side ${principal}°`;
+      referenceDeg.textContent = `${ref}°`;
+      referenceRad.textContent = degreesToRadiansLabel(ref);
+      quadrant.textContent = lineUpText;
+      turns.textContent = isCoterminal ? differenceText : `Original is in ${q}; rotate until the purple arm overlaps the blue arm.`;
+      formula.innerHTML = `Coterminal angles of ${baseAngle}°: ${baseAngle}° + 360°n<br>Examples: ${exampleText}<br>In radians: ${degreesToRadiansLabel(baseAngle).replace(" radians", "")} + 2πn`;
+
+      document.getElementById("dragDot").addEventListener("pointerdown", startDrag);
+      document.getElementById("dragHit").addEventListener("pointerdown", startDrag);
+    }
+
+    function pointerAngle(event) {
+      const rect = svg.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * W / rect.width;
+      const y = (event.clientY - rect.top) * H / rect.height;
+      return mod(Math.atan2(cy - y, x - cx) * 180 / Math.PI, 360);
+    }
+
+    function startDrag(event) {
+      event.preventDefault();
+      dragging = true;
+      svg.setPointerCapture(event.pointerId);
+      previousDragPrincipal = mod(angle, 360);
+      dragAngleOffset = previousDragPrincipal - pointerAngle(event);
+      dragTurns = Math.round((angle - previousDragPrincipal) / 360);
+    }
+
+    svg.addEventListener("pointermove", event => {
+      if (!dragging) return;
+      const rawPrincipal = mod(pointerAngle(event) + dragAngleOffset, 360);
+      const nextPrincipal = snapPrincipalAngle(rawPrincipal);
+      let delta = nextPrincipal - previousDragPrincipal;
+      if (delta > 180) dragTurns -= 1;
+      if (delta < -180) dragTurns += 1;
+      previousDragPrincipal = nextPrincipal;
+      setAngle(dragTurns * 360 + nextPrincipal, true, false);
+    });
+
+    svg.addEventListener("pointerup", event => {
+      dragging = false;
+      try {
+        svg.releasePointerCapture(event.pointerId);
+      } catch (error) {
+        // Pointer capture may already be released when the pointer leaves the SVG.
+      }
+    });
+
+    svg.addEventListener("pointercancel", () => {
+      dragging = false;
+    });
+
+    angleInput.addEventListener("input", () => {
+      const next = Number(angleInput.value);
+      if (Number.isFinite(next)) setBaseAngle(next);
+    });
+
+    angleInput.addEventListener("change", syncControls);
+
+    searchInput.addEventListener("input", () => {
+      const next = Number(searchInput.value);
+      if (Number.isFinite(next)) setAngle(next, false);
+    });
+
+    searchInput.addEventListener("change", syncControls);
+
+    angleSlider.addEventListener("input", () => {
+      setAngle(Number(angleSlider.value), false, false);
+      searchInput.value = String(angle);
+    });
+
+    document.getElementById("ccwBtn").addEventListener("click", () => setAngle(angle + 360));
+    document.getElementById("cwBtn").addEventListener("click", () => setAngle(angle - 360));
+    document.getElementById("add45Btn").addEventListener("click", () => setAngle(angle + 45));
+    document.getElementById("sub45Btn").addEventListener("click", () => setAngle(angle - 45));
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      baseAngle = 45;
+      setAngle(45);
+    });
+    document.getElementById("zeroBtn").addEventListener("click", () => setAngle(0));
+
+    render();
+  </script>
+</body>
+</html>
